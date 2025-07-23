@@ -279,7 +279,7 @@ DATATABLE (
 
 ## 3. Definição e Cálculo das Medidas DAX Principais
 
-### 3.1. `qtd_pedidos_formatado`
+### 3.1. qtd_pedidos_formatado
 
 Conta o número distinto de pedidos.
 
@@ -366,7 +366,7 @@ OTIF = [On-Time] * [In-Full]
 
 **Justificativa**: Combina as condições de `On-Time` e `In-Full`. A lógica do `REMOVEFILTERS` e `qtd_pedidos_formatado` segue a mesma das medidas anteriores. Para detalhes sobre a criação e lógica da coluna `IsFullDelivery`, consulte a Seção 3.2.
 
-### 3.5. `Tempo_Medio_Entrega_Minutos`
+### 3.5. Tempo_Medio_Entrega_Minutos
 
 Calcula o tempo médio total de entrega em minutos.
 
@@ -388,7 +388,7 @@ AVERAGEX(
 
 **Justificativa**: Calcula a média da diferença em minutos entre a data de compra e a data de entrega ao cliente. Os filtros `NOT ISBLANK` são mantidos para robustez, embora a pré-filtragem no Power Query já garanta que a maioria dos nulos foi removida.
 
-### 3.6. `Tempo_Medio_Entrega_Formatado`
+### 3.6. Tempo_Medio_Entrega_Formatado
 
 Formata o tempo médio de entrega em um formato legível (dias, horas, minutos).
 
@@ -425,7 +425,7 @@ IF(
 
 **Justificativa**: Converte o valor numérico de `Tempo_Medio_Entrega_Minutos` em uma string formatada para exibição no dashboard. A lógica de formatação lida com diferentes durações (apenas horas/minutos ou dias/horas/minutos).
 
-### 3.7. `Tempo na Etapa_Visual`
+### 3.7. Tempo na Etapa_Visual
 
 Esta medida ajusta o valor do `Tempo na Etapa` para fins de visualização em gráficos de funil, garantindo que etapas com durações muito curtas ainda sejam visíveis e proporcionais no gráfico.
 
@@ -444,7 +444,7 @@ RETURN
 
 **Justificativa**: Em gráficos de funil, etapas com valores muito pequenos podem se tornar imperceptíveis. Esta medida introduz um "piso" para o valor, garantindo que todas as etapas tenham uma representação visual mínima, sem distorcer significativamente a proporção para valores maiores. O `ValorMinimoParaExibicao` pode ser ajustado conforme a necessidade de visualização.
 
-### 3.8. `Espaco Funil`
+### 3.8. Espaco Funil
 
 Esta medida calcula o espaço auxiliar necessário para criar a forma visual do funil em gráficos específicos (como o gráfico de funil empilhado ou waterfall adaptado), garantindo a correta proporção entre as etapas.
 
