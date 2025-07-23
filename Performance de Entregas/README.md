@@ -1,5 +1,7 @@
 # Visão Geral
 
+![Descrição da imagem](assets/imagens/dashboard-performanceEntregas.png)
+
 Este dashboard foi desenvolvido para monitorar e analisar os indicadores de desempenho logístico, com foco nas métricas de On-Time (Pontualidade), In-Full (Completude) e OTIF (On-Time In-Full), além da Quantidade de Pedidos e o Tempo Médio Gasto em Cada Etapa do processo de entrega. O objetivo é fornecer uma visão clara e objetiva da eficiência logística, permitindo a identificação de gargalos e oportunidades de otimização.
 
 Os dados para este dashboard são provenientes do dataset Brazilian E-commerce (Kaggle), os quais foram persistidos em um banco de dados PostgreSQL. O processo ETL foi realizado diretamente via conector nativo do Power Query, onde as transformações necessárias foram aplicadas antes da modelagem e definição das medidas DAX.
