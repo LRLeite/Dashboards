@@ -21,11 +21,11 @@ Os dados para este dashboard são provenientes do dataset Brazilian E-commerce (
 
 ## 2. Processo ETL
 
-As transformações no Power Query são cruciais para a performance, pois reduzem o volume de dados e preparam as colunas para o modelo DAX.
+As transformações no Power Query são fundamentais para a performance, pois reduzem o volume de dados e preparam as colunas para o modelo DAX.
 
 ### 2.1. Tabela: `orders`
 
-Esta é a tabela fato principal, contendo os pedidos. As transformações focam em filtrar apenas os dados relevantes para KPIs de entrega e otimizar tipos de dados.
+Esta é a tabela fato, que contém os dados dos pedidos. As transformações focam em filtrar apenas os dados relevantes para KPIs de entrega e otimizar tipos de dados.
 
 ```powerquery
 let
@@ -93,15 +93,15 @@ Para ser considerado "In-Full" em operações logísticas reais, um pedido deve 
 
 Este conceito é um dos pilares do OTIF (On-Time In-Full), que busca a perfeição na entrega.
 
-#### 2.2.2. Limitações do Dataset Olist para Cálculo "In-Full" Real
+#### 2.2.2. Limitações do dataset Brazilian E-commerce para o cálculo do "In-Full"
 
-O dataset Brazilian E-commerce apresenta desafios para um cálculo rigoroso de "In-Full" baseado em dados operacionais reais:
+O dataset Brazilian E-commerce apresenta alguns desafios para calcular o "In-Full":
 
 - **Ausência de Detalhe de Quantidade por Item Entregue**: A tabela `order_items` carece de campos explícitos como `quantidade_pedida` e `quantidade_entregue` por SKU, impedindo a validação da acuracidade de quantidade.
 - **Status de Entrega Agregado**: O `order_status` é fornecido apenas a nível de `order_id` (pedido), sem granularidade por item individual, impossibilitando a identificação de entregas parciais.
 - **Dados de Não Conformidade Indiretos**: A tabela `order_reviews` oferece feedback do cliente (`review_score`), que pode indicar problemas na entrega (ex: item faltante/danificado), mas não fornece um flag direto e objetivo para "entrega incompleta".
 
-Devido a essas limitações, a determinação de `IsFullDelivery` com base em regras de negócio estritas não é diretamente factível com os dados brutos desse dataset.
+Devido a essas limitações, a determinação de `IsFullDelivery` com base em regras de negócio não é diretamente factível com os dados brutos desse dataset.
 
 #### 2.2.3. Abordagem e Lógica de Criação (Simulação)
 
@@ -147,7 +147,7 @@ A utilização direta de `orders[IsFullDelivery]` nas medidas DAX, em conjunto c
 
 #### 2.2.5. Conclusão da `IsFullDelivery`
 
-A coluna `IsFullDelivery` neste projeto é um substituto funcional e didático para uma métrica de completude de entrega que, de outra forma, seria inviável com as limitações do dataset Brazillian E-commerce. Ela permite a construção e demonstração de KPIs logísticos, respeitando o conceito de "In-Full" e contornando as restrições de granularidade de dados para fins de estudo.
+A coluna `IsFullDelivery` neste projeto é um substituto funcional e didático para uma métrica de completude de entrega que, de outra forma, seria inviável com as limitações do dataset Brazilian E-commerce. Ela permite a construção e demonstração de KPIs logísticos, respeitando o conceito de "In-Full" e contornando as restrições de granularidade de dados para fins de estudo.
 
 ### 2.3. Tabela: `order_items`
 
@@ -257,7 +257,7 @@ ADDCOLUMNS(
 
 ### 2.7. Tabela: `Fases do Pedido`
 
-Esta é uma tabela de dimensão criada via DAX para categorizar as etapas de entrega.
+Esta é uma tabela de dimensão criada diretamente no Power BI utilizando DAX (`DATATABLE`). Seu propósito principal é categorizar as diferentes etapas do processo de entrega em uma sequência lógica (`Id Etapa`), permitindo a visualização do tempo médio gasto em cada fase através de gráficos de funil ou waterfall. Ela serve como uma dimensão auxiliar para análise de fluxo e gargalos no processo logístico.
 
 ```dax
 Fases do Pedido =
@@ -420,3 +420,33 @@ IF(
 ```
 
 **Justificativa**: Converte o valor numérico de `Tempo_Medio_Entrega_Minutos` em uma string formatada para exibição no dashboard. A lógica de formatação lida com diferentes durações (apenas horas/minutos ou dias/horas/minutos).
+
+### 3.7. `Tempo na Etapa_Visual`
+
+Esta medida ajusta o valor do `Tempo na Etapa` para fins de visualização em gráficos de funil, garantindo que etapas com durações muito curtas ainda sejam visíveis e proporcionais no gráfico.
+
+```dax
+Tempo na Etapa_Visual = 
+VAR ValorOriginalEmMinutos = [Tempo na Etapa] // Pega o valor real da medida Tempo na Etapa (em minutos)
+VAR ValorMinimoParaExibicao = 2500 // Valor mínimo para exibição em minutos (ex: 60 para 1h, 120 para 2h)
+
+RETURN
+    IF(
+        ValorOriginalEmMinutos < ValorMinimoParaExibicao,
+        ValorMinimoParaExibicao, // Se o valor original for menor que o mínimo, retorna o mínimo
+        ValorOriginalEmMinutos   // Caso contrário, retorna o valor original
+    )
+```
+
+**Justificativa**: Em gráficos de funil, etapas com valores muito pequenos podem se tornar imperceptíveis. Esta medida introduz um "piso" para o valor, garantindo que todas as etapas tenham uma representação visual mínima, sem distorcer significativamente a proporção para valores maiores. O `ValorMinimoParaExibicao` pode ser ajustado conforme a necessidade de visualização.
+
+### 3.8. `Espaco Funil`
+
+Esta medida calcula o espaço auxiliar necessário para criar a forma visual do funil em gráficos específicos (como o gráfico de funil empilhado ou waterfall adaptado), garantindo a correta proporção entre as etapas.
+
+```dax
+Espaco Funil = 
+( [Tempo Maximo] - [Tempo na Etapa_Visual] ) / 2
+```
+
+**Justificativa**: Em alguns tipos de gráficos de funil, para que as "barras" do funil se estreitem corretamente em direção ao final, é necessário um cálculo de "espaço" ou "preenchimento" em cada lado da barra. Esta medida calcula esse espaço com base no `Tempo Maximo` (provavelmente a duração total ou a maior duração entre as etapas) e o `Tempo na Etapa_Visual`, dividindo-o por dois para aplicar simetricamente.
