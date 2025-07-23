@@ -8,6 +8,8 @@ Os dados para este dashboard são provenientes do dataset Brazilian E-commerce (
 
 ## 1. Arquitetura do Modelo de Dados
 
+![Descrição da imagem](assets/imagens/modelo.png)
+
 **Tabela Fato Central**: `orders` (contendo informações primárias sobre os pedidos).
 
 **Tabelas de Dimensão Ativas no Modelo**:
