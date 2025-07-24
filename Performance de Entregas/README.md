@@ -23,6 +23,8 @@ Os dados para este dashboard são provenientes do dataset Brazilian E-commerce (
 - `Fases do Pedido` (Dimensão Auxiliar para visualização de etapas)
 - `UF` (Dimensão Geográfica de Unidades Federativas, nomeada como `coordenadas_uf` no modelo, tabela criada para otimização e representação geográfica)
 
+<br>
+
 ## 2. Processo ETL
 
 As transformações no Power Query são fundamentais para a performance, pois reduzem o volume de dados e preparam as colunas para o modelo DAX.
@@ -80,9 +82,13 @@ in
     #"Colunas Reordenadas Final"
 ```
 
+<br>
+
 ### 2.2. Coluna Calculada: `IsFullDelivery` na Tabela `orders`
 
 Esta documentação descreve a criação e o propósito da coluna `IsFullDelivery` na tabela `orders` para o projeto de estudos utilizando o dataset Brazilian E-commerce.
+
+<br>
 
 #### 2.2.1. Conceito de "In-Full"
 
@@ -97,6 +103,8 @@ Para ser considerado "In-Full" em operações logísticas reais, um pedido deve 
 
 Este conceito é um dos pilares do OTIF (On-Time In-Full), que busca a perfeição na entrega.
 
+<br>
+
 #### 2.2.2. Limitações do dataset Brazilian E-commerce para o cálculo do "In-Full"
 
 O dataset Brazilian E-commerce apresenta alguns desafios para calcular o "In-Full":
@@ -106,6 +114,8 @@ O dataset Brazilian E-commerce apresenta alguns desafios para calcular o "In-Ful
 - **Dados de Não Conformidade Indiretos**: A tabela `order_reviews` oferece feedback do cliente (`review_score`), que pode indicar problemas na entrega (ex: item faltante/danificado), mas não fornece um flag direto e objetivo para "entrega incompleta".
 
 Devido a essas limitações, a determinação de `IsFullDelivery` com base em regras de negócio não é diretamente factível com os dados brutos desse dataset.
+
+<br>
 
 #### 2.2.3. Abordagem e Lógica de Criação (Simulação)
 
@@ -141,6 +151,8 @@ SET IsFullDelivery =
 - **Simulação de Conformidade**: Para pedidos 'delivered', um valor booleano (TRUE ou FALSE) é atribuído aleatoriamente, com uma probabilidade de 85.79% de ser TRUE. Este percentual é arbitrário e visa apenas a demonstração.
 - **Propósito**: A simulação permite que a métrica "In-Full" seja calculada, validando o comportamento esperado de um KPI de porcentagem em um ambiente de estudo.
 
+<br>
+
 #### 2.2.4. Impacto no Power BI
 
 Ao importar `IsFullDelivery` para o Power BI (contendo TRUE, FALSE e NULL), as medidas DAX foram configuradas para lidar com esses valores.
@@ -149,9 +161,13 @@ Embora a coluna `IsFullDelivery` no banco de dados possa conter NULLs para pedid
 
 A utilização direta de `orders[IsFullDelivery]` nas medidas DAX, em conjunto com os filtros de data de entrega, assegura cálculos precisos e visuais contínuos, alinhados à definição logística de "In-Full" para pedidos entregues.
 
+<br>
+
 #### 2.2.5. Conclusão da `IsFullDelivery`
 
 A coluna `IsFullDelivery` neste projeto é um substituto funcional e didático para uma métrica de completude de entrega que, de outra forma, seria inviável com as limitações do dataset Brazilian E-commerce. Ela permite a construção e demonstração de KPIs logísticos, respeitando o conceito de "In-Full" e contornando as restrições de granularidade de dados para fins de estudo.
+
+<br>
 
 ### 2.3. Tabela: `order_items`
 
@@ -173,6 +189,8 @@ in
     #"Linhas Filtradas"
 ```
 
+<br>
+
 ### 2.4. Tabela: `zip_code_master`
 
 Esta tabela foi criada e populada no banco de dados PostgreSQL durante a fase de configuração inicial do banco de dados. Sua finalidade é resolver a ausência de uma chave primária e a existência de múltiplas entradas duplicadas para o mesmo prefixo de CEP na tabela `geolocation` original. Ao consolidar esses dados em uma granularidade de CEP única, `zip_code_master` otimiza a modelagem de dados, permitindo o estabelecimento de relacionamentos eficazes e servindo como uma dimensão geográfica limpa e eficiente para informações de localização.
@@ -191,6 +209,8 @@ let
 in
     #"Tipo Alterado"
 ```
+
+<br>
 
 ### 2.5. Tabela: `UF` (`coordenadas_uf`)
 
@@ -211,6 +231,8 @@ let
 in
     #"Colunas Renomeadas"
 ```
+
+<br>
 
 ### 2.6. Tabela: `dCalendar`
 
@@ -259,6 +281,8 @@ ADDCOLUMNS(
 )
 ```
 
+<br>
+
 ### 2.7. Tabela: `Fases do Pedido`
 
 Esta é uma tabela de dimensão criada diretamente no Power BI utilizando DAX (`DATATABLE`). Seu propósito principal é categorizar as diferentes etapas do processo de entrega em uma sequência lógica (`Id Etapa`), permitindo a visualização do tempo médio gasto em cada fase através de gráficos de funil ou waterfall. Ela serve como uma dimensão auxiliar para análise de fluxo e gargalos no processo logístico.
@@ -277,36 +301,55 @@ DATATABLE (
 )
 ```
 
+<br>
+
 ## 3. Definição e Cálculo das Medidas DAX Principais
+
+As medidas DAX utilizadas no dashboard calculam KPIs essenciais para monitorar a performance logística, como `On-Time`, `In-Full`, `OTIF`, quantidade de pedidos e tempos médios por etapa do processo de entrega, apresentados em gráficos e tabelas.
 
 ### 3.1. qtd_pedidos_formatado
 
-Conta o número distinto de pedidos.
+Calcula o número distinto de pedidos e formata dinamicamente para exibição em milhares (ex.: "10.5k") ou como número inteiro, usado no gráfico "Total de Pedidos ao Longo do Tempo" e na tabela.
 
 ```dax
-qtd_pedidos_formatado = DISTINCTCOUNT(orders[order_id])
+qtd_pedidos_formatado = DISTINCTCOUNT('order_items'[order_id])
 ```
+
+Formatação dinâmica para exibição (em milhares ou número inteiro)
+```dax
+VAR totalAjustado = 
+    SWITCH(
+        TRUE(),
+        totalPedidos >= 1000, FORMAT(totalPedidos, "0,.0k"),
+        FORMAT(totalPedidos, "#")
+    )
+RETURN totalAjustado
+```
+
+**Justificativa**: Fornece uma contagem de pedidos formatada de forma amigável para visualizações, facilitando a leitura de grandes volumes de dados.
+
+<br>
 
 ### 3.2. On-Time
 
 Calcula a porcentagem de pedidos entregues no prazo, com base na data de compra.
 
 ```dax
-On-Time =
+On-Time = 
 VAR PedidosEntreguesNoPrazoNoPeriodo =
     CALCULATE(
-        [qtd_pedidos_formatado],
-        REMOVEFILTERS('orders'[order_delivered_customer_date]),
+        [qtd_pedidos_formatado], 
+        REMOVEFILTERS('orders'[order_delivered_customer_date]), 
         'orders'[order_delivered_customer_date] <= 'orders'[order_estimated_delivery_date]
     )
 VAR TotalPedidosCompradosEntreguesNoPeriodo =
     CALCULATE(
-        [qtd_pedidos_formatado],
+        [qtd_pedidos_formatado], 
         REMOVEFILTERS('orders'[order_delivered_customer_date])
     )
 RETURN
 IF(
-    ISBLANK(PedidosEntreguesNoPrazoNoPeriodo),
+    ISBLANK(PedidosEntreguesNoPrazoNoPeriodo), 
     0,
     DIVIDE(
         PedidosEntreguesNoPrazoNoPeriodo,
@@ -316,32 +359,30 @@ IF(
 )
 ```
 
-**Justificativa**:
+**Justificativa**: Essencial para avaliar a pontualidade das entregas, considerando apenas pedidos com datas de entrega válidas e comparando com a data estimada.
 
-- `REMOVEFILTERS('orders'[order_delivered_customer_date])`: Essencial para garantir que o cálculo considere todos os pedidos comprados no período de filtro (`order_purchase_data`), independentemente de quando foram entregues, evitando que o filtro da `dCalendar` na `order_purchase_data` interfira na avaliação da `order_delivered_customer_date`.
-- `'orders'[order_delivered_customer_date] <= 'orders'[order_estimated_delivery_date]`: Compara as datas de entrega e estimada. A conversão para type date no Power Query elimina a necessidade de `DATEVALUE()` aqui, simplificando a expressão.
-- `qtd_pedidos_formatado`: Já pré-filtrada no Power Query para contar apenas pedidos entregues.
+<br>
 
 ### 3.3. In-Full
 
 Calcula a porcentagem de pedidos entregues de forma completa, com base na data de compra.
 
 ```dax
-In-Full =
+In-Full = 
 VAR PedidosEntreguesCompletosNoPeriodo =
     CALCULATE(
-        [qtd_pedidos_formatado],
-        REMOVEFILTERS('orders'[order_delivered_customer_date]),
+        [qtd_pedidos_formatado], 
+        REMOVEFILTERS('orders'[order_delivered_customer_date]), 
         'orders'[IsFullDelivery] = TRUE()
     )
 VAR TotalPedidosCompradosEntreguesNoPeriodo =
     CALCULATE(
-        [qtd_pedidos_formatado],
+        [qtd_pedidos_formatado], 
         REMOVEFILTERS('orders'[order_delivered_customer_date])
     )
 RETURN
 IF(
-    ISBLANK(PedidosEntreguesCompletosNoPeriodo),
+    ISBLANK(PedidosEntreguesCompletosNoPeriodo), 
     0,
     DIVIDE(
         PedidosEntreguesCompletosNoPeriodo,
@@ -351,63 +392,128 @@ IF(
 )
 ```
 
-**Justificativa**:
+**Justificativa**: Avalia a completude das entregas, utilizando a coluna simulada `IsFullDelivery` (Seção 3.2). O `REMOVEFILTERS` assegura a análise correta do período de compra.
 
-- `REMOVEFILTERS('orders'[order_delivered_customer_date])`: Pelo mesmo motivo da medida On-Time.
-- `'orders'[IsFullDelivery] = TRUE()`: Utiliza a coluna `IsFullDelivery` (simulada no banco de dados) para determinar a completude. Para detalhes sobre a criação e lógica desta coluna, consulte a Seção 3.2.
+<br>
 
 ### 3.4. OTIF
 
-Calcula a porcentagem de pedidos que foram On-Time E In-Full, com base na data de compra.
+Calcula a porcentagem de pedidos que são *On-Time* e *In-Full*, com base na data de compra.
 
 ```dax
 OTIF = [On-Time] * [In-Full]
 ```
 
-**Justificativa**: Combina as condições de `On-Time` e `In-Full`. A lógica do `REMOVEFILTERS` e `qtd_pedidos_formatado` segue a mesma das medidas anteriores. Para detalhes sobre a criação e lógica da coluna `IsFullDelivery`, consulte a Seção 3.2.
+**Justificativa**: Combina as condições de `On-Time` e `In-Full` para fornecer uma métrica abrangente da perfeição na entrega, refletindo a eficiência logística total.
 
-### 3.5. Tempo_Medio_Entrega_Minutos
+<br>
 
-Calcula o tempo médio total de entrega em minutos.
+### 3.5. tempo_medio_aprovacao_minutos
+
+Calcula o tempo médio em minutos entre a data de compra e a aprovação do pedido.
 
 ```dax
-Tempo_Medio_Entrega_Minutos =
-AVERAGEX(
-    FILTER(
-        'orders',
-        NOT ISBLANK('orders'[order_delivered_customer_date]) &&
-        NOT ISBLANK('orders'[order_purchase_timestamp])
-    ),
-    DATEDIFF(
-        'orders'[order_purchase_timestamp],
-        'orders'[order_delivered_customer_date],
-        MINUTE
+tempo_medio_aprovacao_minutos = 
+VAR MediaMinutos =
+    AVERAGEX(
+        FILTER(
+            'orders',
+            NOT ISBLANK('orders'[order_approved_at])
+        ),
+        DATEDIFF(
+            'orders'[order_purchase_timestamp],
+            'orders'[order_approved_at],
+            MINUTE
+        )
     )
-)
+RETURN MediaMinutos
 ```
 
-**Justificativa**: Calcula a média da diferença em minutos entre a data de compra e a data de entrega ao cliente. Os filtros `NOT ISBLANK` são mantidos para robustez, embora a pré-filtragem no Power Query já garanta que a maioria dos nulos foi removida.
+**Justificativa**: Fornece a duração média da fase de aprovação do pedido, um KPI crítico para avaliar a eficiência do processamento inicial.
 
-### 3.6. Tempo_Medio_Entrega_Formatado
+<br>
 
-Formata o tempo médio de entrega em um formato legível (dias, horas, minutos).
+### 3.6. tempo_medio_envio_transportadora_minutos
+
+Calcula o tempo médio em minutos entre a aprovação do pedido e a entrega à transportadora.
 
 ```dax
-Tempo_Medio_Entrega_Formatado =
-VAR MediaMinutos = [Tempo_Medio_Entrega_Minutos]
+tempo_medio_envio_transportadora_minutos = 
+VAR MediaMinutos =
+    AVERAGEX(
+        FILTER(
+            'orders',
+            NOT ISBLANK('orders'[order_approved_at]) && NOT ISBLANK('orders'[order_delivered_carrier_date])
+        ),
+        DATEDIFF(
+            'orders'[order_approved_at],
+            'orders'[order_delivered_carrier_date],
+            MINUTE
+        )
+    )
+RETURN MediaMinutos
+```
+
+**Justificativa**: Fornece a duração média da fase de envio à transportadora, um KPI importante para o monitoramento da agilidade na expedição.
+
+<br>
+
+### 3.7. tempo_medio_transito_transportadora_minutos
+
+Calcula o tempo médio em minutos entre a entrega à transportadora e a entrega ao cliente final.
+
+```dax
+tempo_medio_transito_transportadora_minutos = 
+VAR MediaMinutos =
+    AVERAGEX(
+        FILTER(
+            'orders',
+            NOT ISBLANK('orders'[order_delivered_carrier_date]) && NOT ISBLANK('orders'[order_delivered_customer_date])
+        ),
+        DATEDIFF(
+            'orders'[order_delivered_carrier_date],
+            'orders'[order_delivered_customer_date],
+            MINUTE
+        )
+    )
+RETURN MediaMinutos
+```
+
+**Justificativa**: Fornece a duração média da fase de trânsito pela transportadora, um KPI importante para avaliar o desempenho da transportadora.
+
+<br>
+
+### 3.8. tempo_medio_entrega_formatado
+
+Calcula o tempo médio total de entrega e apresenta em um formato legível (dias, horas, minutos). Usado como rótulo de dados no gráfico "Tempo Médio Gasto em cada Etapa" e em tabelas.
+
+```dax
+tempo_medio_entrega_formatado = 
+VAR MediaMinutos =
+    AVERAGEX(
+        FILTER(
+            'orders',
+            NOT ISBLANK('orders'[order_delivered_customer_date]) && 
+            NOT ISBLANK('orders'[order_purchase_timestamp])
+        ),
+        DATEDIFF(
+            'orders'[order_purchase_timestamp], 
+            'orders'[order_delivered_customer_date], 
+            MINUTE
+        )
+    )
 VAR TotalHoras = MediaMinutos / 60
 VAR Dias = INT(TotalHoras / 24)
 VAR HorasRestantes = MOD(INT(TotalHoras), 24)
 VAR MinutosRestantes = MOD(MediaMinutos, 60)
-
 RETURN
 IF(
-    ISBLANK(MediaMinutos) || MediaMinutos = 0,
-    "Não possui pedido(s)",
+    ISBLANK(MediaMinutos),
+    "",
     SWITCH(
         TRUE(),
         TotalHoras < 24,
-        FORMAT(INT(TotalHoras), "00") & "h " & FORMAT(MinutosRestantes, "00") & "m",
+            FORMAT(INT(TotalHoras), "00") & ":" & FORMAT(MinutosRestantes, "00"),
         Dias & "d" &
         IF(
             HorasRestantes > 0,
@@ -415,7 +521,7 @@ IF(
             ""
         ) &
         IF(
-            MinutosRestantes > 0 && Dias > 0,
+            MinutosRestantes > 0 && Dias > 0, 
             " " & FORMAT(MinutosRestantes, "00") & "m",
             ""
         )
@@ -423,34 +529,99 @@ IF(
 )
 ```
 
-**Justificativa**: Converte o valor numérico de `Tempo_Medio_Entrega_Minutos` em uma string formatada para exibição no dashboard. A lógica de formatação lida com diferentes durações (apenas horas/minutos ou dias/horas/minutos).
+**Justificativa**: Permite a visualização rápida e compreensível do tempo total gasto no processo logístico diretamente nos rótulos de dados do gráfico e em tabelas.
 
-### 3.7. Tempo na Etapa_Visual
+<br>
 
-Esta medida ajusta o valor do `Tempo na Etapa` para fins de visualização em gráficos de funil, garantindo que etapas com durações muito curtas ainda sejam visíveis e proporcionais no gráfico.
+### 3.9. Tempo na Etapa
+
+Utiliza uma estrutura SWITCH para selecionar a medida de tempo médio correspondente à fase do pedido.
+
+```dax
+Tempo na Etapa = 
+SWITCH(
+    SELECTEDVALUE('Fases do Pedido'[Etapa]),
+    "Aprovação Pedido", [tempo_medio_aprovacao_minutos],
+    "Envio Transportadora", [tempo_medio_envio_transportadora_minutos],
+    "Trânsito Transportadora", [tempo_medio_transito_transportadora_minutos],
+    "Total Entrega", [tempo_medio_entrega_minutos],
+    BLANK()
+)
+```
+
+**Justificativa**: Agrega dinamicamente o tempo médio de cada fase do pedido, servindo como base para cálculos visuais no gráfico de funil.
+
+<br>
+
+### 3.10. Tempo na Etapa_Visual
+
+Ajusta o valor de `Tempo na Etapa` para visualização no gráfico de funil, garantindo que etapas com durações curtas sejam visíveis.
 
 ```dax
 Tempo na Etapa_Visual = 
-VAR ValorOriginalEmMinutos = [Tempo na Etapa] // Pega o valor real da medida Tempo na Etapa (em minutos)
-VAR ValorMinimoParaExibicao = 2500 // Valor mínimo para exibição em minutos (ex: 60 para 1h, 120 para 2h)
-
+VAR ValorOriginalEmMinutos = [Tempo na Etapa]
+VAR ValorMinimoParaExibicao = 2500
 RETURN
-    IF(
-        ValorOriginalEmMinutos < ValorMinimoParaExibicao,
-        ValorMinimoParaExibicao, // Se o valor original for menor que o mínimo, retorna o mínimo
-        ValorOriginalEmMinutos   // Caso contrário, retorna o valor original
-    )
+IF(
+    ValorOriginalEmMinutos < ValorMinimoParaExibicao,
+    ValorMinimoParaExibicao,
+    ValorOriginalEmMinutos
+)
 ```
 
-**Justificativa**: Em gráficos de funil, etapas com valores muito pequenos podem se tornar imperceptíveis. Esta medida introduz um "piso" para o valor, garantindo que todas as etapas tenham uma representação visual mínima, sem distorcer significativamente a proporção para valores maiores. O `ValorMinimoParaExibicao` pode ser ajustado conforme a necessidade de visualização.
+**Justificativa**: Introduz um "piso" de 2500 minutos para etapas com menor tempo, garantindo visibilidade do rótulo de dados.
 
-### 3.8. Espaco Funil
+<br>
 
-Esta medida calcula o espaço auxiliar necessário para criar a forma visual do funil em gráficos específicos (como o gráfico de funil empilhado ou waterfall adaptado), garantindo a correta proporção entre as etapas.
+### 3.11. Tempo Maximo
+
+Determina o valor máximo de `[Tempo na Etapa]` entre todas as fases do pedido selecionadas ou existentes.
+
+```dax
+Tempo Maximo = 
+MAXX(
+    ALLSELECTED('Fases do Pedido'),
+    [Tempo na Etapa]
+)
+```
+
+**Justificativa**: Utilizado como referência para o cálculo do Espaco Funil, garantindo a correta proporção visual no gráfico de funil.
+
+<br>
+
+### 3.12. Espaco Funil
+
+Calcula o espaço auxiliar necessário para criar a forma visual do funil em gráficos específicos, garantindo a correta proporção entre as etapas.
 
 ```dax
 Espaco Funil = 
 ( [Tempo Maximo] - [Tempo na Etapa_Visual] ) / 2
 ```
 
-**Justificativa**: Em alguns tipos de gráficos de funil, para que as "barras" do funil se estreitem corretamente em direção ao final, é necessário um cálculo de "espaço" ou "preenchimento" em cada lado da barra. Esta medida calcula esse espaço com base no `Tempo Maximo` (provavelmente a duração total ou a maior duração entre as etapas) e o `Tempo na Etapa_Visual`, dividindo-o por dois para aplicar simetricamente.
+**Justificativa**: Garante que as "barras" do funil se estreitem corretamente, calculando o preenchimento necessário para a representação simétrica..
+
+<br>
+
+### 3.13. tempo_medio_entrega_minutos
+
+Calcula o tempo médio total de entrega em minutos entre a data de compra e a entrega ao cliente.
+
+```dax
+tempo_medio_entrega_minutos = 
+VAR MediaMinutos =
+    AVERAGEX(
+        FILTER(
+            'orders',
+            NOT ISBLANK('orders'[order_delivered_customer_date]) && 
+            NOT ISBLANK('orders'[order_purchase_timestamp])
+        ),
+        DATEDIFF(
+            'orders'[order_purchase_timestamp], 
+            'orders'[order_delivered_customer_date], 
+            MINUTE
+        )
+    )
+RETURN MediaMinutos
+```
+
+**Justificativa**: Fornece o tempo médio bruto em minutos do processo logístico total, servindo como base para cálculos como `Tempo na Etapa` e `tempo_medio_entrega_formatado`.
