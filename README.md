@@ -15,5 +15,5 @@ Este repositório serve como um portfólio de projetos de visualização e anál
 Aqui você encontrará uma lista dos dashboards atualmente disponíveis no repositório, com links para suas documentações detalhadas:
 
 * [**Dashboard de Performance de Entrega**](https://github.com/LRLeite/Dashboards/tree/main/Performance%20de%20Entregas): Uma análise aprofundada de indicadores para monitorar a eficácia e eficiência logística.
-* [**Meta Ads Performance | Ganho de Seguidores **](https://github.com/LRLeite/Dashboards/tree/main/Meta%20Ads%20Analytics): Análise desenvolvida para monitorar e otimizar campanhas de tráfego pago com o objetivo principal de aumentar a base de seguidores em plataformas como o Instagram.
+* [**Meta Ads Performance | Ganho de Seguidores**](https://github.com/LRLeite/Dashboards/tree/main/Meta%20Ads%20Analytics): Análise desenvolvida para monitorar e otimizar campanhas de tráfego pago com o objetivo principal de aumentar a base de seguidores em plataformas como o Instagram.
 
