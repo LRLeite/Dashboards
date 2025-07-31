@@ -5,6 +5,9 @@
 ![DAX](https://img.shields.io/badge/DAX-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)
 
 ## Visão Geral
+
+![Dashboard Meta Analytics](https://github.com/LRLeite/Dashboards/blob/main/Meta%20Ads%20Analytics/assets/imagens/dashboard.png)
+
 Este projeto apresenta uma solução de análise de dados desenvolvida em Power BI, focada em monitorar e otimizar campanhas de tráfego pago com o objetivo principal de aumentar a base de seguidores em plataformas como o Instagram. A solução visa transformar dados brutos em insights acionáveis, permitindo que as decisões de marketing sejam mais precisas e alinhadas aos resultados de negócio.
 
 ## Problema Abordado
@@ -24,8 +27,8 @@ Para superar esses desafios, foi desenvolvido um dashboard interativo em Power B
 
 * Insights: Vai além da descrição dos resultados, revelando o "porquê" por trás dos números e guiando a otimização contínua dos investimentos para maximizar o retorno.
 
-## 🏗️ Arquitetura do Modelo de Dados
-### Visão Geral do Modelo IMAGEM modelo
+## Arquitetura do Modelo de Dados
+![Visão geral do modelo de dados](https://github.com/LRLeite/Dashboards/blob/main/Meta%20Ads%20Analytics/assets/imagens/modelo-dados.png)
 
 <br>
 
