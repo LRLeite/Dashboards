@@ -8,7 +8,9 @@
 
 ![Dashboard Meta Analytics](https://github.com/LRLeite/Dashboards/blob/main/Meta%20Ads%20Analytics/assets/imagens/dashboard.png)
 
-Este projeto apresenta uma solução de análise de dados desenvolvida em Power BI, focada em monitorar e otimizar campanhas de tráfego pago com o objetivo principal de aumentar a base de seguidores em plataformas como o Instagram. A solução visa transformar dados brutos em insights acionáveis, permitindo que as decisões de marketing sejam mais precisas e alinhadas aos resultados de negócio.
+Este projeto apresenta uma solução de análise de dados desenvolvida em Power BI, focada em monitorar e otimizar campanhas de tráfego pago com o objetivo principal de aumentar a base de seguidores em plataformas como o Instagram. A solução visa transformar dados brutos em insights, permitindo que as decisões de marketing sejam mais precisas e alinhadas aos resultados de negócio.
+
+*Dados fictícios
 
 ## Problema Abordado
 No cenário do marketing digital, campanhas de aquisição de seguidores frequentemente geram grandes volumes de dados. No entanto, a análise fragmentada ou o foco em métricas isoladas podem mascarar ineficiências e comprometer a escalabilidade. A dificuldade reside em conectar o investimento realizado com o impacto real no crescimento da base de seguidores, compreendendo o "porquê" por trás dos resultados, e não apenas o "o quê".
